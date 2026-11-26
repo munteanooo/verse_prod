@@ -1,3 +1,12 @@
+import { connection } from "next/server";
+import { PatternCards } from "@/components/customer/catalog";
+import { customerMessages as c } from "@/i18n/customer-ro";
+import { catalogDatabase } from "@/infrastructure/customer/pages";
+import {
+  catalogFilters,
+  publicCategories,
+  publishedPatterns,
+} from "@/modules/customer/public-catalog";
 import Image from "next/image";
 import { BookOpen, Ruler, Scissors } from "lucide-react";
 import { ActionLink } from "@/components/ui/button";
@@ -6,7 +15,17 @@ import { messages } from "@/i18n";
 
 const stepIcons = [BookOpen, Ruler, Scissors] as const;
 
-export default function HomePage() {
+export default async function HomePage() {
+  await connection();
+  const db = catalogDatabase();
+  const [featured, categories] = db
+    ? await Promise.all([
+        publishedPatterns(db, catalogFilters.parse({})),
+        publicCategories(db),
+      ])
+    : [{ rows: [] }, []];
+  const featuredPatterns = featured.rows.slice(0, 3);
+  const categoryLinks = categories.filter(({ count }) => count > 0).slice(0, 3);
   const { home } = messages;
   const { sections } = project;
 
@@ -21,7 +40,7 @@ export default function HomePage() {
             <em>{home.titleAccent}</em>
           </h1>
           <p className="intro">{home.intro}</p>
-          <ActionLink href={`#${sections.featured}`}>{home.action}</ActionLink>
+          <ActionLink href={`#${sections.featured}`}>{c.catalog}</ActionLink>
         </div>
         <figure className="hero-figure">
           <div className="hero-image">
@@ -42,38 +61,43 @@ export default function HomePage() {
         id={sections.featured}
         aria-labelledby="featured-title"
       >
-        <h2 id="featured-title">{home.featuredTitle}</h2>
-        <p className="section-intro">{home.featuredDescription}</p>
-        <ul className="pattern-grid">
-          {home.patterns.map(({ name, detail, shape }) => (
-            <li key={name}>
-              <div
-                className={`pattern-image pattern-image--${shape}`}
-                aria-hidden="true"
-              >
-                <span />
-              </div>
-              <h3>{name}</h3>
-              <p>{detail}</p>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section
-        className="category-section"
-        id={sections.categories}
-        aria-labelledby="category-title"
-      >
-        <div className="wrap category-inner">
-          <h2 id="category-title">{home.categoriesTitle}</h2>
-          <ul>
-            {home.categories.map((name) => (
-              <li key={name}>{name}</li>
-            ))}
-          </ul>
+        <h2 id="featured-title">
+          {featuredPatterns.length ? c.catalog : c.collection}
+        </h2>
+        <p className="section-intro">
+          {featuredPatterns.length ? c.catalogDescription : c.emptyHome}
+        </p>
+        {featuredPatterns.length > 0 && (
+          <PatternCards patterns={featuredPatterns} />
+        )}
+        <div className="mt-6">
+          <ActionLink href={project.routes.patterns}>{c.catalog}</ActionLink>
         </div>
       </section>
+
+      {categoryLinks.length > 0 && (
+        <section
+          className="category-section"
+          id={sections.categories}
+          aria-labelledby="category-title"
+        >
+          <div className="wrap category-inner">
+            <h2 id="category-title">{c.categories}</h2>
+            <ul>
+              {categoryLinks.map((category) => (
+                <li key={category.slug}>
+                  <a
+                    className="text-link"
+                    href={project.routes.categories + "/" + category.slug}
+                  >
+                    {category.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <section
         className="wrap editorial-section process"

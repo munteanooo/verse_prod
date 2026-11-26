@@ -27,3 +27,7 @@ Audit records persist provisioning, role changes, successful privileged authenti
 The catalog API repeats the server-side ADMIN and MFA check on every request. Mutations also require the configured Origin, use bounded JSON and drop unrecognized properties before use. The service checks ownership using persisted owner IDs. Designer rights are ready for a future protected boundary. Instructions and descriptions are plain text rendered by React. No file, SVG or executable HTML inputs are accepted.
 
 Draft writes check version and revision under a lock. Trigger guards freeze historical versions and their children. The recommended runtime grant omits publication-state updates. Unauthorized clients receive no drafts. The publication check rejects every request while validated document assets are unavailable. The catalog audit events omit submitted content and record only controlled metadata.
+
+## Customer measurements
+
+Public catalog reads project only the discoverable, published version. Profile access requires a verified session and the matching persisted owner on every read or mutation. The profile pages are noindex and the identity-specific pages and APIs use private no-store responses. Guest values are transient and sent only in a JSON body. Disable infrastructure request-body logging. Never log or audit body measurements. The PostgreSQL limiter counts requests without storing measurement values.

@@ -1,6 +1,6 @@
 # VERSE
 
-`verse_prod` is a Romanian-first web application for sewing patterns. Phase 3 adds the MFA-protected catalog, reusable measurement definitions and a six-step pattern editor backed by PostgreSQL.
+`verse_prod` is a Romanian-first web application for sewing patterns. Phase 4 adds public catalog reads, schema-driven size matching and private measurement profiles.
 
 ## Local development
 
@@ -38,6 +38,12 @@ Run `pnpm db:migrate` with the operator URL before opening the catalog. Sign in 
 Optional measurement examples can be applied with `psql -d verse_prod -f scripts/catalog/seed-measurements.sql` against local development PostgreSQL. The seed is idempotent and patterns can use any subset of the library.
 
 For a deployed database, apply the Phase 3 runtime grants separately. Public publication stays blocked until Phase 5 provides validated documents. See the [catalog architecture and grants](docs/architecture/catalog.md) and the [Romanian atelier guide](docs/guides/atelier.md).
+
+## Customer catalog
+
+Apply the profile migration using `pnpm db:migrate`. Visit `/patterns` and `/categories` for the public catalog and `/account/measurements` to manage private profiles. The catalog can be empty until Phase 5 validates document assets. Published fixtures exist only in isolated automated tests. Run `pnpm test:e2e:identity` to verify a synthetic published detail, the mobile size table, profile reuse and blocked access by a different account.
+
+See the [customer architecture and database grants](docs/architecture/customer.md) and [Romanian atelier guide](docs/guides/atelier.md).
 
 ## Verification
 

@@ -10,3 +10,9 @@
 8. În **Revizuire**, verifică lista de cerințe și salvează. **Previzualizează** deschide datele salvate. Publicarea rămâne blocată până când documentele de tipar pot fi atașate și validate în Faza 5.
 
 Dacă o colegă a salvat între timp aceeași ciornă, serverul păstrează salvarea deja efectuată. Consultă ciorna actualizată și refă schimbările necesare înainte de a salva din nou.
+
+## Ce vede clientul
+
+În catalog apar numai tiparele publicate. Când documentele vor permite publicarea, fiecare tipar va afișa piesele, materialele și instrucțiunile salvate în versiunea respectivă. Câmpurile de măsurare apar în ordinea stabilită în atelier, cu denumirea, unitatea și intervalul alese.
+
+Clientul poate calcula mărimile compatibile fără să își salveze măsurătorile. Dacă există mai multe potriviri, le vede pe toate și poate alege orice mărime din tabel. Un profil salvat este privat și se creează doar printr-o acțiune explicită în **Profilurile mele de măsurători**.

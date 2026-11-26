@@ -8,14 +8,14 @@ See [Identity schema](identity.md) for the Phase 2 tables. No application profil
 
 Phase 3 implements the [administrative catalog](catalog.md), including pattern versions and sizing.
 
+Phase 4 implements the [public catalog and private measurement profiles](customer.md).
+
 ## Planned relational model
 
 The following is design documentation for future feature tables. Use UUID primary keys where appropriate, UTC `timestamptz`, explicit foreign key actions and indexes on frequently joined foreign keys. Manage migrations in version control.
 
 | Entity                         | Relationships and constraints                                                                         |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| measurement_profiles           | Account owner and display name                                                                        |
-| measurement_values             | Profile and definition unique together. Value and unit validation                                     |
 | file_assets                    | Unique storage key, ownership, size, media type, checksum and access classification                   |
 | orders, payments, entitlements | Future commerce and provider event idempotency. Entitlements reference the buyer and purchased access |
 | generated_patterns             | Future generated artifacts linked to owner, source version and file asset                             |

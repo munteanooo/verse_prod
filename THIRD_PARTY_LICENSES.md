@@ -31,3 +31,7 @@ The 111 added or changed lock entries were checked using pnpm license inventory 
 ## Phase 3 additions
 
 The administrative catalog reuses the locked Phase 2 dependencies. Phase 3 introduces no additional packages or assets.
+
+## Phase 4 additions
+
+The customer catalog and forms reuse the existing lockfile. Phase 4 adds no dependencies or third-party assets.

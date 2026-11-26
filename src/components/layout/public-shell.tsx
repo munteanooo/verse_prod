@@ -4,9 +4,12 @@ import { messages } from "@/i18n";
 import { identityMessages } from "@/i18n/identity-ro";
 
 const navigation = [
-  { id: project.sections.featured, label: messages.navigation.featured },
-  { id: project.sections.categories, label: messages.navigation.categories },
-  { id: project.sections.process, label: messages.navigation.process },
+  { href: project.routes.patterns, label: messages.navigation.featured },
+  { href: project.routes.categories, label: messages.navigation.categories },
+  {
+    href: project.routes.customer + "#" + project.sections.process,
+    label: messages.navigation.process,
+  },
 ];
 
 export function PublicShell({ children }: { children: ReactNode }) {
@@ -22,9 +25,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
           </a>
           <nav aria-label={messages.navigation.label}>
             <ul className="navigation">
-              {navigation.map(({ id, label }) => (
-                <li key={id}>
-                  <a href={`${project.routes.customer}#${id}`}>{label}</a>
+              {navigation.map(({ href, label }) => (
+                <li key={href}>
+                  <a href={href}>{label}</a>
                 </li>
               ))}
               <li>

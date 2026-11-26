@@ -43,7 +43,8 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/api/v1/admin/:path*",
-    "/account",
+    "/account/:path*",
+    "/patterns/:path*",
     "/login",
     "/register",
     "/forgot-password",
