@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { project } from "@/config/project";
 import { messages } from "@/i18n";
+import { identityMessages } from "@/i18n/identity-ro";
 
 const navigation = [
   { id: project.sections.featured, label: messages.navigation.featured },
@@ -26,6 +27,9 @@ export function PublicShell({ children }: { children: ReactNode }) {
                   <a href={`${project.routes.customer}#${id}`}>{label}</a>
                 </li>
               ))}
+              <li>
+                <a href={project.routes.login}>{identityMessages.login}</a>
+              </li>
             </ul>
           </nav>
         </div>

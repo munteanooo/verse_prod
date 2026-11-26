@@ -15,6 +15,7 @@ export default defineConfig({
     command: `pnpm start --hostname 127.0.0.1 --port ${port}`,
     url: origin,
     reuseExistingServer: false,
+    env: { DATABASE_URL: "", BETTER_AUTH_SECRET: "" },
     timeout: 60_000,
   },
 });

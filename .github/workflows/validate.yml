@@ -13,6 +13,26 @@ jobs:
     timeout-minutes: 15
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      TEST_DATABASE_URL: postgresql://verse_test@127.0.0.1:5432/verse_prod_test
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: verse_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+          POSTGRES_DB: verse_prod_test
+        ports:
+          - "127.0.0.1:5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U verse_test -d verse_prod_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      mailpit:
+        image: axllent/mailpit:v1.34.0
+        ports:
+          - "127.0.0.1:1025:1025"
+          - "127.0.0.1:8025:8025"
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -20,11 +40,14 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --strict-peer-dependencies
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: DATABASE_MIGRATION_URL="$TEST_DATABASE_URL" pnpm db:migrate
+      - run: pnpm test:integration
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
+      - run: pnpm test:e2e:identity
