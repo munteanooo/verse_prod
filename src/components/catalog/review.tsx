@@ -10,7 +10,8 @@ import {
   type Definition,
   type Draft,
 } from "@/modules/catalog/validation";
-import { inputClass, panelClass } from "./classes";
+import { panelClass } from "./classes";
+import { MeasureField } from "@/components/customer/measurement-field";
 
 export function MeasurementPreview({
   draft,
@@ -26,28 +27,7 @@ export function MeasurementPreview({
       <p className="text-sm">{m.previewHint}</p>
       {fields.length === 0 && <p>{m.noResults}</p>}
       {fields.map((field) => (
-        <label key={field.id} className="block text-sm">
-          <span className="font-semibold">
-            {field.name} ({field.unit}) ·{" "}
-            {field.required ? m.required : m.optional}
-          </span>
-          <input
-            className={inputClass}
-            type="number"
-            inputMode="decimal"
-            min={showLength(field.min, field.unit)}
-            max={showLength(field.max, field.unit)}
-            step={field.precision === null ? "any" : 10 ** -field.precision}
-            required={field.required}
-          />
-          <span className="block text-muted-foreground">
-            {showLength(field.min, field.unit)}–
-            {showLength(field.max, field.unit)} {field.unit}
-          </span>
-          {field.instructions && (
-            <span className="block">{field.instructions}</span>
-          )}
-        </label>
+        <MeasureField key={field.id} field={field} prefix="preview" />
       ))}
     </section>
   );

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { project } from "../../src/config/project";
 
-test("renders the Romanian landing page and opens its demonstration section", async ({
+test("renders the Romanian landing page and opens its empty collection section", async ({
   page,
 }) => {
   await page.goto(project.routes.customer);
@@ -18,11 +18,15 @@ test("renders the Romanian landing page and opens its demonstration section", as
     )
     .toBeGreaterThan(0);
 
-  await page.getByRole("link", { name: "Vezi colecția demonstrativă" }).click();
+  await page.getByRole("link", { name: "Catalog de tipare" }).first().click();
   await expect(page).toHaveURL(new RegExp(`#${project.sections.featured}$`));
   await expect(
-    page.getByRole("heading", { name: "Piese de la care poți porni" }),
+    page.getByRole("heading", { name: "Colecția se pregătește" }),
   ).toBeInViewport();
+  await page.goto("/patterns");
+  await expect(page.getByRole("status")).toContainText(
+    "Momentan nu există tipare publicate",
+  );
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(page.viewportSize()!.width);

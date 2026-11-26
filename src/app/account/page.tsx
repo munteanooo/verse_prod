@@ -2,6 +2,7 @@ import { PublicShell } from "@/components/layout/public-shell";
 import { AuthForm } from "@/components/identity/auth-form";
 import { SessionControls } from "@/components/identity/session-controls";
 import { project } from "@/config/project";
+import { customerMessages } from "@/i18n/customer-ro";
 import { identityMessages as m } from "@/i18n/identity-ro";
 import { requireAccount } from "@/infrastructure/auth/access";
 
@@ -17,6 +18,9 @@ export default async function AccountPage() {
             {m.administrator}
           </a>
         )}
+        <a className="text-link" href={project.routes.measurements}>
+          {customerMessages.profiles}
+        </a>
         <SessionControls />
         <h2 className="font-serif text-3xl">{m.mfa}</h2>
         {actor.user.twoFactorEnabled ? (
