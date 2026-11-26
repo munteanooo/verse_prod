@@ -7,10 +7,11 @@ export function proxy(request: NextRequest) {
   const { admin, api } = project.routes;
   const adminApi = api + admin;
   if (
-    path === adminApi ||
-    path.startsWith(adminApi + "/") ||
-    ((path === admin || path.startsWith(admin + "/")) &&
-      !process.env.DATABASE_URL)
+    (path === adminApi ||
+      path.startsWith(adminApi + "/") ||
+      path === admin ||
+      path.startsWith(admin + "/")) &&
+    !process.env.DATABASE_URL
   ) {
     return new NextResponse(null, {
       status: 404,

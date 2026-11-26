@@ -55,6 +55,6 @@ export const identityMessages = {
     "Audit",
   ],
   adminIntro:
-    "Ai acces la panoul de administrare. Modulele din navigare vor fi disponibile în etapele următoare.",
+    "Folosește navigarea pentru categorii, măsurători și ciornele tiparelor.",
   comingLater: "În pregătire",
 };

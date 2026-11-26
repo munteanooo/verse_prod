@@ -6,28 +6,19 @@ Phase 1 creates only directories with active responsibilities. There are no empt
 
 See [Identity schema](identity.md) for the Phase 2 tables. No application profile duplicates Better Auth identity fields.
 
+Phase 3 implements the [administrative catalog](catalog.md), including pattern versions and sizing.
+
 ## Planned relational model
 
 The following is design documentation for future feature tables. Use UUID primary keys where appropriate, UTC `timestamptz`, explicit foreign key actions and indexes on frequently joined foreign keys. Manage migrations in version control.
 
-| Entity                          | Relationships and constraints                                                                         |
-| ------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| profiles                        | One profile per authenticated account                                                                 |
-| user_roles                      | Account and role unique together. Trusted grants only                                                 |
-| categories                      | Unique slug and archival timestamp                                                                    |
-| patterns                        | Category and owner foreign keys. Unique slug                                                          |
-| pattern_versions                | Pattern and revision number unique together. Status and publication timestamps                        |
-| pattern_pieces                  | Version foreign key, stable order and positive cut quantity                                           |
-| measurement_definitions         | Unique stable identifier, unit and valid bounds                                                       |
-| pattern_required_measurements   | Version and definition unique together. Order and requirement rules                                   |
-| measurement_profiles            | Account owner and display name                                                                        |
-| measurement_values              | Profile and definition unique together. Value and unit validation                                     |
-| pattern_size_variants           | Version and size label unique together. File asset reference                                          |
-| pattern_size_measurement_ranges | Variant and definition unique together. Ordered minimum and maximum                                   |
-| file_assets                     | Unique storage key, ownership, size, media type, checksum and access classification                   |
-| audit_logs                      | Append-only action, subject, timestamp and safe correlation data                                      |
-| orders, payments, entitlements  | Future commerce and provider event idempotency. Entitlements reference the buyer and purchased access |
-| generated_patterns              | Future generated artifacts linked to owner, source version and file asset                             |
+| Entity                         | Relationships and constraints                                                                         |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| measurement_profiles           | Account owner and display name                                                                        |
+| measurement_values             | Profile and definition unique together. Value and unit validation                                     |
+| file_assets                    | Unique storage key, ownership, size, media type, checksum and access classification                   |
+| orders, payments, entitlements | Future commerce and provider event idempotency. Entitlements reference the buyer and purchased access |
+| generated_patterns             | Future generated artifacts linked to owner, source version and file asset                             |
 
 Publication uses a transaction, row-level concurrency control where appropriate and an explicit lifecycle. Published content is immutable. Changes produce a new draft. Archive retains references and history. Hard deletion is restricted and requires a defined retention or privacy workflow. Explicitly define cascades when implementing the schema.
 

@@ -1,6 +1,6 @@
 # Security baseline
 
-The admin layout and page both call a server guard. It retrieves a verified Better Auth session from PostgreSQL, reads the role and requires recent MFA evidence on the current session. Administrative API paths remain closed. The public portal and liveness endpoint work independently of identity services.
+The admin layout and page both call a server guard. It retrieves a verified Better Auth session from PostgreSQL, reads the role and requires recent MFA evidence on the current session. The public portal and liveness endpoint work independently of identity services.
 
 ## Passwords, sessions and recovery
 
@@ -21,3 +21,9 @@ Sensitive pages receive nonce-based CSP with strict-dynamic, framing disabled an
 PostgreSQL permits 30 requests per endpoint and client per minute, and six per endpoint and normalized email. Vercel uses its platform IP header. Other environments share an endpoint bucket. This can affect availability under load. Database errors fail closed. Schedule operator-controlled pruning of expired auth_throttle rows before broad deployment.
 
 Audit records persist provisioning, role changes, successful privileged authentication, authenticated access denials and privileged session revocations. They include server-generated correlations and omit credentials, cookies, tokens and OTPs. The runtime login must have insert-only audit privileges. Agree on retention, hosting log redaction, supply-chain review and monitoring before commercial operation.
+
+## Administrative catalog
+
+The catalog API repeats the server-side ADMIN and MFA check on every request. Mutations also require the configured Origin, use bounded JSON and drop unrecognized properties before use. The service checks ownership using persisted owner IDs. Designer rights are ready for a future protected boundary. Instructions and descriptions are plain text rendered by React. No file, SVG or executable HTML inputs are accepted.
+
+Draft writes check version and revision under a lock. Trigger guards freeze historical versions and their children. The recommended runtime grant omits publication-state updates. Unauthorized clients receive no drafts. The publication check rejects every request while validated document assets are unavailable. The catalog audit events omit submitted content and record only controlled metadata.

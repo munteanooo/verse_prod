@@ -27,3 +27,7 @@ The shadcn/ui foundation uses local UI source, compatible aliases and CSS tokens
 | tsx                                 | 4.23.15 | MIT        |
 
 The 111 added or changed lock entries were checked using pnpm license inventory and exact npm metadata for entries that were not installed on macOS ARM64. They declare MIT, Apache-2.0, MIT-0, Unlicense or BSD-3-Clause. Stable Drizzle Kit currently resolves two deprecated MIT development subdependencies from esbuild-kit. PostgreSQL (PostgreSQL License) and Mailpit (MIT) run as local test services. No hosted authentication or email service is required for testing.
+
+## Phase 3 additions
+
+The administrative catalog reuses the locked Phase 2 dependencies. Phase 3 introduces no additional packages or assets.

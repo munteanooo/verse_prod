@@ -1,6 +1,6 @@
 # VERSE
 
-`verse_prod` is a Romanian-first web application for sewing patterns. Phase 2 adds PostgreSQL-backed identity, session management and administration protected by role and MFA.
+`verse_prod` is a Romanian-first web application for sewing patterns. Phase 3 adds the MFA-protected catalog, reusable measurement definitions and a six-step pattern editor backed by PostgreSQL.
 
 ## Local development
 
@@ -31,6 +31,14 @@ Open `http://localhost:3000/`. The public landing page and liveness endpoint wor
 
 The CLI can also set `DESIGNER` or `CUSTOMER`. Roles cannot be assigned over HTTP. See the [schema and grants](docs/architecture/identity.md) and [security baseline](docs/security/baseline.md).
 
+## Administrative catalog
+
+Run `pnpm db:migrate` with the operator URL before opening the catalog. Sign in with an ADMIN account and MFA. Open `/admin/categories` and `/admin/measurements` to configure reusable entries. Then go to `/admin/patterns/new`, save a draft and use the edit and preview links from the pattern list.
+
+Optional measurement examples can be applied with `psql -d verse_prod -f scripts/catalog/seed-measurements.sql` against local development PostgreSQL. The seed is idempotent and patterns can use any subset of the library.
+
+For a deployed database, apply the Phase 3 runtime grants separately. Public publication stays blocked until Phase 5 provides validated documents. See the [catalog architecture and grants](docs/architecture/catalog.md) and the [Romanian atelier guide](docs/guides/atelier.md).
+
 ## Verification
 
 ```sh
@@ -57,18 +65,18 @@ The identity browser test uses a production build on port 3103 and the default S
 
 ## Repository map
 
-| Path                                                    | Responsibility                                                     |
-| ------------------------------------------------------- | ------------------------------------------------------------------ |
-| `src/app`                                               | Public and identity pages, protected admin layout and API handlers |
-| `src/config`                                            | Project identity, routes, URL validation and application metadata  |
-| `src/i18n`                                              | Romanian message catalog and supported locale identifiers          |
-| `src/components`                                        | Shared UI and separate presentation shells                         |
-| `src/proxy.ts`                                          | Sensitive-page CSP and closed administrative API namespace         |
-| `public/images`                                         | Project-owned demo imagery                                         |
-| `src/infrastructure`, `src/modules/identity`, `drizzle` | Database, Better Auth, email, policies, audit and migrations       |
-| `tests`                                                 | Vitest unit tests and Playwright smoke tests                       |
-| `.github/workflows`                                     | Read-only CI validation                                            |
-| `docs`                                                  | Architecture, design decisions, security and hosting               |
+| Path                                                    | Responsibility                                                      |
+| ------------------------------------------------------- | ------------------------------------------------------------------- |
+| `src/app`                                               | Public and identity pages, protected admin layout and API handlers  |
+| `src/config`                                            | Project identity, routes, URL validation and application metadata   |
+| `src/i18n`                                              | Romanian message catalog and supported locale identifiers           |
+| `src/components`                                        | Shared UI and separate presentation shells                          |
+| `src/proxy.ts`                                          | Sensitive-page CSP and fail-closed behavior without identity config |
+| `public/images`                                         | Project-owned demo imagery                                          |
+| `src/infrastructure`, `src/modules/identity`, `drizzle` | Database, Better Auth, email, policies, audit and migrations        |
+| `tests`                                                 | Vitest unit tests and Playwright smoke tests                        |
+| `.github/workflows`                                     | Read-only CI validation                                             |
+| `docs`                                                  | Architecture, design decisions, security and hosting                |
 
 ## Manual hosting setup
 

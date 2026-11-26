@@ -1,3 +1,4 @@
+import { readJson } from "../../shared/http-json";
 import { randomUUID } from "node:crypto";
 import { toNextJsHandler } from "better-auth/next-js";
 import { z } from "zod";
@@ -55,31 +56,6 @@ function reply(
   });
 }
 
-async function readJson(request: Request) {
-  if (
-    !request.headers.get("content-type")?.startsWith("application/json") ||
-    !request.body
-  )
-    return;
-  const reader = request.body.getReader();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
-  let text = "";
-  let length = 0;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) return JSON.parse(text + decoder.decode()) as unknown;
-      length += value.byteLength;
-      if (length > 8192) return;
-      text += decoder.decode(value, { stream: true });
-    }
-  } catch {
-    return undefined;
-  } finally {
-    await reader.cancel().catch(() => {});
-  }
-}
-
 export async function identityRequest(
   request: Request,
   getService = getIdentity,
@@ -121,7 +97,7 @@ export async function identityRequest(
     headers.set("x-verse-correlation-id", correlationId);
     const adapter = toNextJsHandler(auth);
 
-    const body = post[action].safeParse(await readJson(request));
+    const body = post[action].safeParse(await readJson(request, 8192));
     if (!body.success) return reply(400, correlationId);
     if (
       "email" in body.data &&

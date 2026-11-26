@@ -48,3 +48,5 @@ The registration trigger is owned by the operator and assigns the database's def
 | `admin:access`       |          |          | ✓     |
 
 `pattern:update:own` checks resource ownership. `admin:access` is the only permission used by an application route in this phase. Privileged permissions require MFA on the current session. The operator CLI is the only role assignment interface.
+
+Phase 3 deployments also require the separate [catalog runtime grants](catalog.md#api-and-runtime-grants).

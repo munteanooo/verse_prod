@@ -18,9 +18,20 @@ export default async function AdminLayout({
         {
           label: m.adminNavigation[0],
           href: project.routes.admin,
-          current: true,
         },
-        ...m.adminNavigation.slice(1).map((label) => ({ label })),
+        {
+          label: m.adminNavigation[1],
+          href: project.routes.admin + "/patterns",
+        },
+        {
+          label: m.adminNavigation[2],
+          href: project.routes.admin + "/categories",
+        },
+        {
+          label: m.adminNavigation[3],
+          href: project.routes.admin + "/measurements",
+        },
+        ...m.adminNavigation.slice(4).map((label) => ({ label })),
         { label: m.account, href: project.routes.account },
       ]}
     >

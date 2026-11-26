@@ -2,6 +2,8 @@ export const roles = ["CUSTOMER", "DESIGNER", "ADMIN"] as const;
 export type Role = (typeof roles)[number];
 
 const permissions = [
+  "category:manage",
+  "measurement:manage",
   "pattern:read",
   "pattern:create",
   "pattern:update:own",
