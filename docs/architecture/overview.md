@@ -2,11 +2,13 @@
 
 VERSE is a modular monolith with one Next.js App Router application. Route Handler and React entry points compose application use cases as features arrive. Customer and admin presentation have separate shells. TypeScript domain and use-case modules will own business rules and consume narrow repository or adapter contracts where substitution is useful. Next.js, Drizzle, Better Auth and infrastructure clients belong at composition or implementation boundaries.
 
-Phase 1 creates only directories with active responsibilities. There are no empty domain, migration, upload, backup or infrastructure placeholders. The app root serves the public route group. The administrative shell lives in shared layout components for isolated tests while the admin namespace is closed. URL validation takes a small environment input and is reused at configuration load and in the metadata module. Routing literals appearing in framework conventions and statically analyzed matchers are covered by route smoke checks.
+Phase 1 creates only directories with active responsibilities. There are no empty domain, migration, upload, backup or infrastructure placeholders. The app root serves the public route group. Phase 2 activates the shared administration shell behind session, role and MFA guards. Authentication uses the framework convention under `/api/auth`; `/api/v1` remains the application API namespace. URL validation takes a small environment input and is reused at configuration load and in the metadata module. Routing literals appearing in framework conventions and statically analyzed matchers are covered by route smoke checks.
+
+See [Identity schema](identity.md) for the Phase 2 tables. No application profile duplicates Better Auth identity fields.
 
 ## Planned relational model
 
-The following is design documentation for Phase 2 and later. Use UUID primary keys where appropriate, UTC `timestamptz`, explicit foreign key actions and indexes on frequently joined foreign keys. Manage migrations in version control.
+The following is design documentation for future feature tables. Use UUID primary keys where appropriate, UTC `timestamptz`, explicit foreign key actions and indexes on frequently joined foreign keys. Manage migrations in version control.
 
 | Entity                          | Relationships and constraints                                                                         |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------- |

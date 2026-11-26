@@ -8,6 +8,13 @@ export const project = {
     customer: "/",
     admin: "/admin",
     api: "/api/v1",
+    authApi: "/api/auth",
+    account: "/account",
+    login: "/login",
+    register: "/register",
+    forgotPassword: "/forgot-password",
+    resetPassword: "/reset-password",
+    verifyEmail: "/verify-email",
   },
   sections: {
     featured: "tipare",

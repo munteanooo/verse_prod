@@ -8,6 +8,7 @@ const { siteUrl } = parseEnvironment({
 const nextConfig: NextConfig = {
   agentRules: false,
   poweredByHeader: false,
+  logging: { incomingRequests: false },
   async headers() {
     return [
       {

@@ -1,6 +1,6 @@
 # VERSE
 
-`verse_prod` is a Romanian-first web application for sewing patterns. Phase 1 provides the public foundation, a liveness endpoint and a closed administration area.
+`verse_prod` is a Romanian-first web application for sewing patterns. Phase 2 adds PostgreSQL-backed identity, session management and administration protected by role and MFA.
 
 ## Local development
 
@@ -13,13 +13,28 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Open `http://localhost:3000/`. Try the collection link and all three navigation links, then resize to a mobile viewport. `/admin` and its descendants return 404. `/api/v1/health` returns HTTP 200 with `{"status":"ok"}`. A missing public page shows a Romanian recovery screen.
+Open `http://localhost:3000/`. The public landing page and liveness endpoint work without an environment file.
 
-The app runs with no environment file. To set an explicit local origin, copy `.env.example` to `.env.local` and uncomment its example. `VERSE_SITE_URL` accepts an HTTPS origin or a loopback HTTP origin and is used for canonical metadata. Omit it if the canonical origin is unknown. Use no path, query, fragment or credentials. No external account is required.
+### PostgreSQL and SMTP
+
+1. Start local PostgreSQL 17. From a local PostgreSQL administrator account, run `createuser --pwprompt verse_operator` and `createdb --owner=verse_operator verse_prod`. A development database can use that role for both URLs. Use separate roles for deployments.
+2. Copy `.env.example` to `.env.local`. Set `VERSE_SITE_URL`, `DATABASE_URL`, `DATABASE_MIGRATION_URL` and `BETTER_AUTH_SECRET`. Generate the secret using the example command.
+3. Run `pnpm db:migrate` explicitly. Use `pnpm db:generate` only when intentionally changing the schema. The application never migrates on startup.
+4. Run `mailpit --listen 127.0.0.1:8025 --smtp 127.0.0.1:1025`. Set `VERSE_SMTP_URL` and `VERSE_EMAIL_FROM` as in the environment example. Open the local inbox at `http://127.0.0.1:8025`. [Mailpit installation](https://mailpit.axllent.org/docs/install/)
+5. Start `pnpm dev`, register at `/register`, open the verification link, confirm the address, and log in at `/login`. Use `/account` to sign out or revoke sessions. Use `/forgot-password` for password reset and `/verify-email` to request a new verification link.
+
+### First administrator
+
+1. Register and verify an account. Sign in and configure an authenticator on `/account`. Save the one-use recovery codes offline.
+2. From a trusted environment with the operator database URL, run `pnpm identity:role <verified-email> ADMIN`. It records the promotion and revokes old sessions. Repeating it for the same assignment has no effect.
+3. Sign in again with the password and an authenticator or recovery code, then open `/admin`. The server requires a verified account, an ADMIN assignment and a recent second factor on the current session.
+
+The CLI can also set `DESIGNER` or `CUSTOMER`. Roles cannot be assigned over HTTP. See the [schema and grants](docs/architecture/identity.md) and [security baseline](docs/security/baseline.md).
 
 ## Verification
 
 ```sh
+pnpm install --frozen-lockfile
 pnpm format:check
 pnpm lint
 pnpm typecheck
@@ -29,27 +44,37 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-On a clean Linux machine use `pnpm exec playwright install --with-deps chromium` if the system libraries are missing. Playwright starts the production build on loopback port 3100 and checks desktop and mobile Chromium. Run `pnpm start` after the build for manual production verification. Run `pnpm format` to apply formatting.
+Use `pnpm exec playwright install --with-deps chromium` if system libraries are missing on Linux. Public tests use port 3100 without identity credentials. For identity tests, start a separate loopback database with a name ending in `_test` and export its URL. Use synthetic data and Mailpit.
+
+```sh
+export TEST_DATABASE_URL=postgresql://verse_test@127.0.0.1:5432/verse_prod_test
+DATABASE_MIGRATION_URL="$TEST_DATABASE_URL" pnpm db:migrate
+pnpm test:integration
+pnpm test:e2e:identity
+```
+
+The identity browser test uses a production build on port 3103 and the default SMTP/HTTP mail ports 1025/8025. Override the mail ports through `TEST_SMTP_PORT` and `TEST_MAILPIT_PORT`.
 
 ## Repository map
 
-| Path                | Responsibility                                                        |
-| ------------------- | --------------------------------------------------------------------- |
-| `src/app`           | App Router, public pages, fail-closed admin routes and health handler |
-| `src/config`        | Project identity, routes, URL validation and application metadata     |
-| `src/i18n`          | Romanian message catalog and supported locale identifiers             |
-| `src/components`    | Shared UI and separate presentation shells                            |
-| `src/proxy.ts`      | Deny-by-default administrative namespace guard                        |
-| `public/images`     | Project-owned demo imagery                                            |
-| `tests`             | Vitest unit tests and Playwright smoke tests                          |
-| `.github/workflows` | Read-only CI validation                                               |
-| `docs`              | Architecture, design decisions, security and hosting                  |
+| Path                                                    | Responsibility                                                     |
+| ------------------------------------------------------- | ------------------------------------------------------------------ |
+| `src/app`                                               | Public and identity pages, protected admin layout and API handlers |
+| `src/config`                                            | Project identity, routes, URL validation and application metadata  |
+| `src/i18n`                                              | Romanian message catalog and supported locale identifiers          |
+| `src/components`                                        | Shared UI and separate presentation shells                         |
+| `src/proxy.ts`                                          | Sensitive-page CSP and closed administrative API namespace         |
+| `public/images`                                         | Project-owned demo imagery                                         |
+| `src/infrastructure`, `src/modules/identity`, `drizzle` | Database, Better Auth, email, policies, audit and migrations       |
+| `tests`                                                 | Vitest unit tests and Playwright smoke tests                       |
+| `.github/workflows`                                     | Read-only CI validation                                            |
+| `docs`                                                  | Architecture, design decisions, security and hosting               |
 
 ## Manual hosting setup
 
 1. If repository hosting is wanted, create or select the GitHub repository manually and configure its real remote. Enable the `Validate` branch protection check when available.
 2. When ready for a personal, non-commercial prototype, create or import the Next.js project in Vercel using a Hobby account and the default project subdomain. Choose project slug `verse-prod` for the proposed hostname if available. Set Node.js 24 and keep pnpm selected through the manifest and lockfile. Keep external integrations and paid services disabled.
-3. Enter the actual canonical HTTPS origin as `VERSE_SITE_URL` for Production. Leave it unset in Preview unless an explicit preview canonical is needed. Verify the routes above after a manually approved deployment.
+3. Enter the actual canonical HTTPS origin as `VERSE_SITE_URL` for Production. Set the runtime database URL and auth secret only in approved Vercel environments. Set SMTP and sender after configuring a real delivery provider. Keep the migration URL in the operator environment. Use separate databases and origins for previews with identity enabled.
 4. Review the provider terms before any commercial use. Project import can enable automatic deployments on future pushes. Configure the integration to match the desired release policy before connecting the repository.
 
 See [hosting and recovery](docs/architecture/hosting.md), [architecture](docs/architecture/overview.md), [security](docs/security/baseline.md), and [dependency licensing](THIRD_PARTY_LICENSES.md).

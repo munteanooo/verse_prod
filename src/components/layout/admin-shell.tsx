@@ -6,10 +6,12 @@ export function AdminShell({
   title,
   navigation,
   children,
+  unavailableLabel,
 }: {
   title: string;
-  navigation: readonly { href: string; label: string; current?: boolean }[];
+  navigation: readonly { href?: string; label: string; current?: boolean }[];
   children: ReactNode;
+  unavailableLabel?: string;
 }) {
   return (
     <>
@@ -24,14 +26,28 @@ export function AdminShell({
           <nav aria-label={messages.admin.label} className="mt-5">
             <ul>
               {navigation.map(({ href, label, current }) => (
-                <li key={href}>
-                  <a
-                    className="inline-flex min-h-11 items-center pr-4 hover:underline aria-[current=page]:font-semibold"
-                    href={href}
-                    aria-current={current ? "page" : undefined}
-                  >
-                    {label}
-                  </a>
+                <li key={label}>
+                  {href ? (
+                    <a
+                      className="inline-flex min-h-11 items-center pr-4 hover:underline aria-[current=page]:font-semibold"
+                      href={href}
+                      aria-current={current ? "page" : undefined}
+                    >
+                      {label}
+                    </a>
+                  ) : (
+                    <span
+                      aria-disabled="true"
+                      className="flex min-h-11 items-center flex-wrap gap-x-2"
+                    >
+                      {label}
+                      {unavailableLabel && (
+                        <small className="text-muted-foreground">
+                          {unavailableLabel}
+                        </small>
+                      )}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>

@@ -13,3 +13,17 @@ The pnpm license inventory of the installed macOS ARM64 dependency tree containe
 The remaining 72 lockfile entries, primarily optional platform binaries, were checked against their exact npm registry versions. Their declared licenses match the same set, including combined terms for Sharp on Windows and WASM. Run `pnpm licenses list --json` after installation and review the terms and notices for the chosen distribution target. Hosted service terms are separate from dependency licenses. GitHub Actions workflow dependencies are checkout, setup-node and pnpm action-setup under MIT.
 
 The shadcn/ui foundation uses local UI source, compatible aliases and CSS tokens. The upstream shadcn/ui project uses MIT. The editorial hero is an AI-generated demonstration image created for this application. Garment silhouettes are project CSS. The application uses system font stacks, with no redistributed fonts or hotlinked images.
+
+## Phase 2 additions
+
+| Dependency                          | Version | License    |
+| ----------------------------------- | ------- | ---------- |
+| Better Auth and its Drizzle adapter | 1.7.28  | MIT        |
+| Drizzle ORM                         | 0.45.4  | Apache-2.0 |
+| Drizzle Kit                         | 0.31.11 | MIT        |
+| Postgres.js                         | 3.4.9   | Unlicense  |
+| Nodemailer                          | 10.6.1  | MIT-0      |
+| Nodemailer types                    | 8.0.2   | MIT        |
+| tsx                                 | 4.23.15 | MIT        |
+
+The 111 added or changed lock entries were checked using pnpm license inventory and exact npm metadata for entries that were not installed on macOS ARM64. They declare MIT, Apache-2.0, MIT-0, Unlicense or BSD-3-Clause. Stable Drizzle Kit currently resolves two deprecated MIT development subdependencies from esbuild-kit. PostgreSQL (PostgreSQL License) and Mailpit (MIT) run as local test services. No hosted authentication or email service is required for testing.
