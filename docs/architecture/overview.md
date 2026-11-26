@@ -1,0 +1,38 @@
+# Architecture
+
+VERSE is a modular monolith with one Next.js App Router application. Route Handler and React entry points compose application use cases as features arrive. Customer and admin presentation have separate shells. TypeScript domain and use-case modules will own business rules and consume narrow repository or adapter contracts where substitution is useful. Next.js, Drizzle, Better Auth and infrastructure clients belong at composition or implementation boundaries.
+
+Phase 1 creates only directories with active responsibilities. There are no empty domain, migration, upload, backup or infrastructure placeholders. The app root serves the public route group. The administrative shell lives in shared layout components for isolated tests while the admin namespace is closed. URL validation takes a small environment input and is reused at configuration load and in the metadata module. Routing literals appearing in framework conventions and statically analyzed matchers are covered by route smoke checks.
+
+## Planned relational model
+
+The following is design documentation for Phase 2 and later. Use UUID primary keys where appropriate, UTC `timestamptz`, explicit foreign key actions and indexes on frequently joined foreign keys. Manage migrations in version control.
+
+| Entity                          | Relationships and constraints                                                                         |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| profiles                        | One profile per authenticated account                                                                 |
+| user_roles                      | Account and role unique together. Trusted grants only                                                 |
+| categories                      | Unique slug and archival timestamp                                                                    |
+| patterns                        | Category and owner foreign keys. Unique slug                                                          |
+| pattern_versions                | Pattern and revision number unique together. Status and publication timestamps                        |
+| pattern_pieces                  | Version foreign key, stable order and positive cut quantity                                           |
+| measurement_definitions         | Unique stable identifier, unit and valid bounds                                                       |
+| pattern_required_measurements   | Version and definition unique together. Order and requirement rules                                   |
+| measurement_profiles            | Account owner and display name                                                                        |
+| measurement_values              | Profile and definition unique together. Value and unit validation                                     |
+| pattern_size_variants           | Version and size label unique together. File asset reference                                          |
+| pattern_size_measurement_ranges | Variant and definition unique together. Ordered minimum and maximum                                   |
+| file_assets                     | Unique storage key, ownership, size, media type, checksum and access classification                   |
+| audit_logs                      | Append-only action, subject, timestamp and safe correlation data                                      |
+| orders, payments, entitlements  | Future commerce and provider event idempotency. Entitlements reference the buyer and purchased access |
+| generated_patterns              | Future generated artifacts linked to owner, source version and file asset                             |
+
+Publication uses a transaction, row-level concurrency control where appropriate and an explicit lifecycle. Published content is immutable. Changes produce a new draft. Archive retains references and history. Hard deletion is restricted and requires a defined retention or privacy workflow. Explicitly define cascades when implementing the schema.
+
+## Planned pattern and document workflow
+
+The workflow takes functional inspiration from [FreeSewing](https://freesewing.eu/), especially the progression from choosing a garment to working with measurements. VERSE uses its own presentation, copy and assets.
+
+Start with uploaded PDF patterns and recommend an existing size only when matching measurement rules. Store dimensions in millimeters and convert to PDF points at 72 points per inch. Tiling must preserve vector geometry and use A4, configurable printable margins and overlap, alignment, page numbering, a 50 mm calibration square and print-at-100-percent instructions. Keep computationally intensive generation portable through a replaceable execution adapter. Personalized drafting requires professional validation of drafting rules and geometry.
+
+Store original assets privately with short-lived authorized URLs. Keep public previews separate. Validate size, media type, signatures and upload completion before publishing references. Accept PDF and supported raster formats initially. File signature validation does not detect malware. Future checkout uses hosted payment pages, verified idempotent webhooks and server-controlled prices and entitlements.
