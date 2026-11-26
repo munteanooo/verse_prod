@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { catalogMessages as c } from "../../src/i18n/catalog-ro";
 import { identityMessages as m } from "../../src/i18n/identity-ro";
 import { testDatabaseUrl } from "../support/database";
 import { totp } from "../support/totp";
@@ -71,6 +72,13 @@ test("registers via SMTP, denies customer access and opens admin only after MFA"
   await expect(page).toHaveURL(/\/account$/);
   expect((await page.goto("/admin"))?.status()).toBe(404);
 
+  const denied = await page.request.post("/api/v1/admin/categories", {
+    headers: { Origin: baseURL! },
+    data: { value: { slug: "unauthorized" } },
+  });
+  expect(denied.status()).toBe(404);
+  expect((await page.goto("/admin/patterns"))?.status()).toBe(404);
+
   await page.goto("/forgot-password");
   await page.getByLabel(m.email).fill(email);
   await page.getByRole("button", { name: m.submit }).click();
@@ -117,4 +125,129 @@ test("registers via SMTP, denies customer access and opens admin only after MFA"
   ).toBeVisible();
   await expect(page.getByText(m.adminIntro)).toBeVisible();
   expect((await request.get("/api/v1/admin/users")).status()).toBe(404);
+  await test.step("manages a category and a reusable measurement", async () => {
+    const suffix = email.slice(0, 8);
+    const categoryName = "Fuste " + suffix;
+    const definitionName = "Talie " + suffix;
+    const csrf = await page.request.post("/api/v1/admin/categories", {
+      headers: { Origin: "https://untrusted.example.test" },
+      data: {},
+    });
+    expect(csrf.status()).toBe(403);
+    await page.getByRole("link", { name: c.categories, exact: true }).click();
+    await page.getByRole("button", { name: c.categoryNew }).click();
+    await page.getByLabel(c.name, { exact: true }).fill(categoryName);
+    await page.getByLabel(new RegExp(c.slug)).fill("fuste-" + suffix);
+    await page.getByRole("button", { name: c.save, exact: true }).click();
+    await expect(page.getByText(categoryName, { exact: true })).toBeVisible();
+
+    await page.getByRole("link", { name: c.measurements, exact: true }).click();
+    await page.getByRole("button", { name: c.measurementNew }).click();
+    await page.getByLabel(c.name, { exact: true }).fill(definitionName);
+    await page.getByLabel(new RegExp(c.key)).fill("talie-" + suffix);
+    await page.getByLabel(c.min, { exact: true }).fill("40");
+    await page.getByLabel(c.max, { exact: true }).fill("130");
+    await page.getByRole("button", { name: c.save, exact: true }).click();
+    await expect(page.getByText(definitionName, { exact: true })).toBeVisible();
+  });
+
+  await test.step("saves, resumes, validates and previews a six-step draft", async () => {
+    const suffix = email.slice(0, 8);
+    const patternName = "Fustă petrecută " + suffix;
+    const step = (index: number) =>
+      page.getByRole("button", {
+        name: String(index + 1) + ". " + c.steps[index],
+        exact: true,
+      });
+    const save = () =>
+      page.getByRole("button", { name: c.saveDraft, exact: true }).click();
+    await page.getByRole("link", { name: c.patterns, exact: true }).click();
+    await page.getByRole("link", { name: c.newPattern }).click();
+    await page.getByRole("button", { name: c.newPattern }).click();
+    await expect(page).toHaveURL(/\/admin\/patterns\/[a-f0-9-]+\/edit$/);
+    await page.getByLabel(c.name, { exact: true }).fill(patternName);
+    await page.getByLabel(new RegExp(c.slug)).fill("fusta-" + suffix);
+    await page
+      .getByRole("combobox", { name: c.category, exact: true })
+      .selectOption({ label: "Fuste " + suffix });
+    await save();
+    await expect(page.getByRole("status")).toHaveText(c.saved);
+    await page.getByRole("link", { name: c.back }).click();
+    await page.getByRole("button", { name: c.search, exact: true }).waitFor();
+    await page.getByRole("textbox", { name: c.search }).fill(patternName);
+    await page.getByRole("button", { name: c.search, exact: true }).click();
+    const result = page
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("heading", { name: patternName }) });
+    await result.getByRole("link", { name: c.edit }).click();
+    await expect(page.getByLabel(c.name, { exact: true })).toHaveValue(
+      patternName,
+    );
+    await page.getByLabel(c.short, { exact: true }).fill("Schiță");
+    await page
+      .getByLabel(c.description, { exact: true })
+      .fill("Fustă pentru test.");
+    await page
+      .getByRole("combobox", { name: c.difficulty })
+      .selectOption("BEGINNER");
+    await page.getByLabel(c.materials).fill("In");
+    await page.getByLabel(c.instructions).fill("Coase tivul.");
+
+    await step(1).click();
+    await page.getByRole("button", { name: c.addPiece }).click();
+    await page.getByLabel(c.name, { exact: true }).fill("Față");
+    await page.getByLabel(c.quantity).fill("0");
+    await save();
+    await expect(
+      page.getByRole("alert").filter({ hasText: c.errors.invalid }),
+    ).toBeVisible();
+    await page.getByLabel(c.quantity).fill("2");
+    await page.getByLabel(c.seam).fill("12,5");
+
+    await step(2).click();
+    await page.getByRole("button", { name: c.refreshMeasurements }).click();
+    await expect(page.getByRole("status")).toHaveText(c.refreshedMeasurements);
+    await page
+      .getByRole("combobox", { name: c.measurements, exact: true })
+      .selectOption({ label: "Talie " + suffix + " (cm)" });
+    await page
+      .getByRole("button", { name: c.addMeasurement, exact: true })
+      .click();
+    await expect(
+      page.getByRole("heading", { name: c.measurementPreview }),
+    ).toBeVisible();
+
+    await step(3).click();
+    await page.getByRole("button", { name: c.addSize }).click();
+    await page.getByLabel(c.label).fill("Scurtă");
+    await page.getByLabel("Talie " + suffix + " (cm)", { exact: true }).check();
+    await page.getByLabel(c.min, { exact: true }).fill("64");
+    await page.getByLabel(c.max, { exact: true }).fill("74");
+
+    await step(4).click();
+    await page
+      .getByRole("combobox", { name: c.steps[4], exact: true })
+      .selectOption("PREMIUM");
+    await page.getByLabel(c.amount).fill("25,50");
+    await step(5).click();
+    await save();
+    await expect(
+      page.getByRole("status").filter({ hasText: c.saved }),
+    ).toBeVisible();
+    await page.getByRole("link", { name: c.preview, exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: patternName }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Scurtă", { exact: false }).last(),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth),
+    ).toBeLessThanOrEqual(390);
+    await page.getByRole("button", { name: c.publish }).click();
+    await expect(
+      page.getByRole("status").filter({ hasText: c.publicationBlocked }),
+    ).toBeVisible();
+  });
 });

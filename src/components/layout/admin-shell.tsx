@@ -53,7 +53,11 @@ export function AdminShell({
             </ul>
           </nav>
         </aside>
-        <main id="content" tabIndex={-1}>
+        <main
+          id="content"
+          tabIndex={-1}
+          className="min-w-0 [overflow-wrap:anywhere]"
+        >
           <h1 className="font-serif text-4xl">{title}</h1>
           {children}
         </main>
