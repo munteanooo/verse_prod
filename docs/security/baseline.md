@@ -31,3 +31,7 @@ Draft writes check version and revision under a lock. Trigger guards freeze hist
 ## Customer measurements
 
 Public catalog reads project only the discoverable, published version. Profile access requires a verified session and the matching persisted owner on every read or mutation. The profile pages are noindex and the identity-specific pages and APIs use private no-store responses. Guest values are transient and sent only in a JSON body. Disable infrastructure request-body logging. Never log or audit body measurements. The PostgreSQL limiter counts requests without storing measurement values.
+
+## Document storage and distribution
+
+The administrative file boundary requires MFA and the configured origin for mutations. Quarantine grants only authorize the selected upload. Validate object size, SHA-256 and supported content before storing it at a trusted key. Serve PDF attachments through authorization and a brief redirect, never directly inline on an administrative page. Do not log signed grants, PDF content, storage credentials or user measurements. Output validation is not antivirus scanning. Keep a residual parser risk review, hosted CORS tests, object inventory, backup policy and print calibration in the deployment checklist.

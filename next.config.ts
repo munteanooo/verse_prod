@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
   agentRules: false,
   poweredByHeader: false,
   logging: { incomingRequests: false },
+  serverExternalPackages: ["sharp"],
+  outputFileTracingIncludes: {
+    "/api/v1/admin/*": [
+      "./src/infrastructure/documents/worker.mjs",
+      "./src/modules/documents/*.mjs",
+      "./node_modules/pdf-lib/**/*",
+      "./node_modules/.pnpm/{pdf-lib@*,@pdf-lib+*,pako@*,tslib@*}/node_modules/**/*",
+    ],
+  },
   async headers() {
     return [
       {

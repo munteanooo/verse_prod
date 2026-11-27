@@ -6,6 +6,7 @@ import { inputClass, panelClass } from "@/components/catalog/classes";
 import { project } from "@/config/project";
 import { profilesApi } from "./paths";
 import { catalogMessages as c } from "@/i18n/catalog-ro";
+import { documentMessages as d } from "@/i18n/documents-ro";
 import { customerMessages as m } from "@/i18n/customer-ro";
 import { showLength } from "@/modules/catalog/validation";
 import {
@@ -22,12 +23,18 @@ type Result = ReturnType<typeof recommendSize>;
 
 export function SizeTool({
   slug,
+  edition,
+  downloads,
+  premium,
   fields,
   sizes,
   profiles,
   authenticated,
 }: {
   slug: string;
+  edition: number;
+  downloads: { sizeId: string; pages: number | null }[];
+  premium: boolean;
   fields: MeasurementField[];
   sizes: Size[];
   profiles: { id: string; name: string }[];
@@ -39,6 +46,54 @@ export function SizeTool({
   const [result, setResult] = useState<Result>();
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState("");
+  const selectedDocument = downloads.find(
+    ({ sizeId }) => sizeId === selectedSize,
+  );
+  const [downloadPending, setDownloadPending] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
+
+  async function download() {
+    if (!selectedDocument || premium) return;
+    setDownloadPending(true);
+    setDownloadError("");
+    try {
+      const response = await fetch(
+        project.routes.api + "/patterns/" + slug + "/download",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ sizeId: selectedSize, edition }),
+        },
+      );
+      if (!response.ok) throw new Error("Download unavailable");
+      if (response.headers.get("content-type") === "application/pdf") {
+        const objectUrl = URL.createObjectURL(await response.blob());
+        const link = document.createElement("a");
+        link.href = objectUrl;
+        link.download =
+          /filename="([a-zA-Z0-9._-]+)"/.exec(
+            response.headers.get("content-disposition") ?? "",
+          )?.[1] ?? "verse-a4.pdf";
+        document.body.append(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10000);
+      } else {
+        const result: { url: string } = await response.json();
+        const destination = new URL(result.url);
+        if (destination.protocol !== "https:")
+          throw new Error("Download unavailable");
+        window.location.assign(destination.href);
+      }
+    } catch {
+      setDownloadError(d.unavailable);
+    } finally {
+      setDownloadPending(false);
+    }
+  }
 
   async function calculate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -242,7 +297,43 @@ export function SizeTool({
             </label>
           </>
         )}
-        <p className="text-sm text-muted-foreground">{m.documents}</p>
+        <div className="grid gap-2">
+          {premium ? (
+            <p>{d.premium}</p>
+          ) : selectedDocument ? (
+            <div className="grid gap-3">
+              <p>
+                {d.a4}
+                {selectedDocument.pages &&
+                  " · " + d.pages + " " + selectedDocument.pages}
+              </p>
+              <div>
+                <Button
+                  disabled={downloadPending}
+                  onClick={() => void download()}
+                >
+                  {downloadPending ? m.loading : d.download}
+                </Button>
+              </div>
+              {downloadError && (
+                <p role="alert" className="text-accent">
+                  {downloadError}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p>
+              {downloads.length && !selectedSize
+                ? d.selectToDownload
+                : d.unavailable}
+            </p>
+          )}
+          {downloads.length > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {d.print} {d.calibration} {d.align}
+            </p>
+          )}
+        </div>
       </div>
     </section>
   );

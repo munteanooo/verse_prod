@@ -102,7 +102,7 @@ export const catalogMessages = {
   missing: "Lipsește",
   history: "Istoric versiuni",
   createVersion: "Creează o ciornă din ultima versiune",
-  publish: "Verifică publicarea",
+  publish: "Publică tiparul",
   publicationBlocked:
     "Publicarea este blocată până când documentele tiparului sunt disponibile și validate.",
   overlap: "Intervalele se suprapun pentru mărimile",
@@ -119,6 +119,8 @@ export const catalogMessages = {
   },
   errors: {
     invalid: "Verifică valorile indicate.",
+    association:
+      "Elimină mai întâi fișierele asociate piesei, măsurătorii sau mărimii.",
     conflict:
       "Ciorna a fost schimbată sau arhivată. Descarcă pagina din nou înainte de a salva.",
     duplicate: "Identificatorul este deja folosit.",

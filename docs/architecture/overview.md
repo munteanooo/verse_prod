@@ -10,6 +10,8 @@ Phase 3 implements the [administrative catalog](catalog.md), including pattern v
 
 Phase 4 implements the [public catalog and private measurement profiles](customer.md).
 
+Phase 5 implements [file management, publication and distribution](documents.md).
+
 ## Planned relational model
 
 The following is design documentation for future feature tables. Use UUID primary keys where appropriate, UTC `timestamptz`, explicit foreign key actions and indexes on frequently joined foreign keys. Manage migrations in version control.

@@ -28,6 +28,8 @@ import {
   messageFor,
   mutateCatalog,
 } from "./controls";
+import { FilePanel, fetchFiles, filesReady } from "./files";
+import type { FileSummary } from "@/modules/documents/service";
 import { PatternActions } from "./pattern-actions";
 import { patternsHref } from "./paths";
 import { MeasurementPreview, PatternReview } from "./review";
@@ -118,6 +120,8 @@ export function Wizard({
   versionId,
   revision: initialRevision,
   initial,
+  initialFiles,
+  canWithdraw,
   options,
   definitions: initialDefinitions,
 }: {
@@ -125,10 +129,13 @@ export function Wizard({
   versionId: string;
   revision: number;
   initial: Draft;
+  initialFiles: FileSummary[];
+  canWithdraw: boolean;
   options: Category[];
   definitions: Definition[];
 }) {
   const [draft, setDraft] = useState(initial);
+  const [files, setFiles] = useState(initialFiles);
   const [revision, setRevision] = useState(initialRevision);
   const [step, setStep] = useState(0);
   const [chosen, setChosen] = useState("");
@@ -740,10 +747,14 @@ export function Wizard({
           definitions={definitions}
           category={category?.name}
           active={Boolean(category && !category.archived)}
+          documentsReady={filesReady(files, draft, revision)}
         />
         <PatternActions
           id={id}
           archived={false}
+          versionId={versionId}
+          revision={revision}
+          canWithdraw={canWithdraw}
           draft
           disabled={dirty || pending}
         />
@@ -774,6 +785,19 @@ export function Wizard({
       </div>
       <fieldset disabled={pending || loadingDefinitions} className="min-w-0">
         {content}
+        {step !== 4 && (
+          <FilePanel
+            key={step}
+            versionId={versionId}
+            revision={revision}
+            step={step}
+            files={files}
+            refresh={async () => setFiles(await fetchFiles(versionId))}
+            draft={draft}
+            fields={measureFields}
+            dirty={dirty}
+          />
+        )}
       </fieldset>
       <div className="flex flex-wrap gap-3">
         {step > 0 && (

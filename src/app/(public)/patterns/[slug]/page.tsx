@@ -1,3 +1,5 @@
+import { PatternImage } from "@/components/customer/pattern-image";
+import { LibraryAction } from "@/components/customer/library-action";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { Price } from "@/components/customer/catalog";
@@ -41,9 +43,7 @@ export default async function Page({ params }: Props) {
         {m.back}
       </a>
       <div className="grid gap-6 md:grid-cols-2 md:items-center">
-        <div className="grid aspect-[3/2] place-items-center bg-muted p-6 text-muted-foreground">
-          {m.imagePending}
-        </div>
+        <PatternImage id={pattern.coverId} alt={pattern.coverAlt} />
         <div className="grid gap-3">
           <a
             className="text-link w-fit"
@@ -59,6 +59,18 @@ export default async function Page({ params }: Props) {
           </p>
         </div>
       </div>
+      {pattern.images.length > 0 && (
+        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {pattern.images.map((image) => (
+            <li key={image.id}>
+              <PatternImage id={image.id} alt={image.alt} />
+            </li>
+          ))}
+        </ul>
+      )}
+      {actor && pattern.price === "FREE" && pattern.downloads.length > 0 && (
+        <LibraryAction slug={pattern.slug} />
+      )}
       <div className="max-w-prose space-y-3">
         <h2 className="font-serif text-3xl">{c.description}</h2>
         <p className="whitespace-pre-wrap">{pattern.description}</p>
@@ -101,6 +113,9 @@ export default async function Page({ params }: Props) {
       <SizeTool
         slug={slug}
         fields={pattern.fields}
+        edition={pattern.edition}
+        downloads={pattern.downloads}
+        premium={pattern.price === "PREMIUM"}
         sizes={pattern.sizes}
         profiles={profiles}
         authenticated={Boolean(actor)}

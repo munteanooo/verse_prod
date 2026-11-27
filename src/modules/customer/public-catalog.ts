@@ -3,6 +3,7 @@ import {
   asc,
   desc,
   eq,
+  exists,
   ilike,
   inArray,
   isNotNull,
@@ -14,6 +15,11 @@ import {
   notExists,
 } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import {
+  fileAssets,
+  patternWithdrawals,
+  savedPatterns,
+} from "../../infrastructure/database/file-schema";
 import { z } from "zod";
 import type { Database } from "../../infrastructure/database/connection";
 import {
@@ -71,10 +77,25 @@ const visible = (db: Pick<Database, "select">) =>
   and(
     currentPublished(db, new Date()),
     isNull(patterns.archivedAt),
+    notExists(
+      db
+        .select({ id: patternWithdrawals.patternId })
+        .from(patternWithdrawals)
+        .where(eq(patternWithdrawals.patternId, patterns.id)),
+    ),
     eq(categories.archived, false),
   );
+const cover = alias(fileAssets, "published_cover");
+const covers = and(
+  eq(cover.versionId, patternVersions.id),
+  eq(cover.status, "READY"),
+  eq(cover.purpose, "COVER_IMAGE"),
+);
 const cardFields = {
   slug: patternVersions.slug,
+  edition: patternVersions.number,
+  coverId: cover.id,
+  coverAlt: cover.alt,
   name: patternVersions.name,
   summary: patternVersions.short,
   category: patternVersions.categoryName,
@@ -85,6 +106,9 @@ const cardFields = {
   currency: patternVersions.currency,
 };
 export type PatternCard = {
+  coverId: string | null;
+  coverAlt: string | null;
+  edition: number;
   slug: string;
   name: string;
   summary: string;
@@ -111,6 +135,8 @@ export type PublicPattern = PatternCard & {
   }[];
   fields: MeasurementField[];
   sizes: Size[];
+  images: { id: string; alt: string }[];
+  downloads: { sizeId: string; pages: number | null }[];
 };
 
 const publicQuery = (db: Pick<Database, "select">) =>
@@ -118,7 +144,8 @@ const publicQuery = (db: Pick<Database, "select">) =>
     .select(cardFields)
     .from(patternVersions)
     .innerJoin(patterns, eq(patternVersions.patternId, patterns.id))
-    .innerJoin(categories, eq(patternVersions.categoryId, categories.id));
+    .innerJoin(categories, eq(patternVersions.categoryId, categories.id))
+    .leftJoin(cover, covers);
 const search = (value: string) => "%" + value.replace(/[\\%_]/g, "\\$&") + "%";
 
 export async function publishedPatterns(db: Database, filters: CatalogFilters) {
@@ -173,6 +200,12 @@ export async function publicCategories(db: Database, selected?: string) {
       and(
         eq(patterns.id, patternVersions.patternId),
         isNull(patterns.archivedAt),
+        notExists(
+          db
+            .select({ id: patternWithdrawals.patternId })
+            .from(patternWithdrawals)
+            .where(eq(patternWithdrawals.patternId, patterns.id)),
+        ),
       ),
     )
     .where(
@@ -208,6 +241,7 @@ export async function publishedPattern(
         .from(patternVersions)
         .innerJoin(patterns, eq(patternVersions.patternId, patterns.id))
         .innerJoin(categories, eq(patternVersions.categoryId, categories.id))
+        .leftJoin(cover, covers)
         .where(and(visible(tx), eq(patternVersions.slug, path)))
         .limit(1);
       if (!row) return;
@@ -266,8 +300,41 @@ export async function publishedPattern(
               ),
             )
         : [];
+      const images = await tx
+        .select({ id: fileAssets.id, alt: fileAssets.alt })
+        .from(fileAssets)
+        .where(
+          and(
+            eq(fileAssets.versionId, id),
+            eq(fileAssets.status, "READY"),
+            inArray(fileAssets.purpose, [
+              "GALLERY_IMAGE",
+              "PATTERN_PREVIEW",
+              "MEASUREMENT_ILLUSTRATION",
+            ]),
+          ),
+        )
+        .orderBy(asc(fileAssets.position), asc(fileAssets.id));
+      const assets =
+        row.price === "FREE"
+          ? await tx
+              .select({ sizeId: fileAssets.sizeId, pages: fileAssets.pages })
+              .from(fileAssets)
+              .where(
+                and(
+                  eq(fileAssets.versionId, id),
+                  eq(fileAssets.status, "READY"),
+                  eq(fileAssets.purpose, "PATTERN_A4_PDF"),
+                ),
+              )
+          : [];
+      const downloads = assets.flatMap(({ sizeId, pages }) =>
+        sizeId ? [{ sizeId, pages }] : [],
+      );
       return {
         ...data,
+        images,
+        downloads,
         pieces,
         fields,
         sizes: sizes.map((v) => ({
@@ -334,4 +401,55 @@ export async function publishedDefinitions(
     .orderBy(asc(fields.name), asc(fields.id))
     .limit(500);
   return rows.map((row) => ({ ...row, required: false }));
+}
+
+export async function publicEdition(db: Database, key: string) {
+  const [entry] = await db
+    .select({
+      id: patternVersions.id,
+      patternId: patterns.id,
+      edition: patternVersions.number,
+      price: patternVersions.priceKind,
+      state: patternVersions.state,
+    })
+    .from(patternVersions)
+    .innerJoin(patterns, eq(patternVersions.patternId, patterns.id))
+    .innerJoin(categories, eq(patternVersions.categoryId, categories.id))
+    .where(and(visible(db), eq(patternVersions.slug, key)))
+    .limit(1);
+  return entry;
+}
+
+export async function libraryPatterns(db: Database, owner: string) {
+  return db
+    .select({
+      id: patterns.id,
+      slug: patternVersions.slug,
+      name: patternVersions.name,
+    })
+    .from(savedPatterns)
+    .innerJoin(patterns, eq(patterns.id, savedPatterns.patternId))
+    .innerJoin(patternVersions, eq(patternVersions.patternId, patterns.id))
+    .innerJoin(categories, eq(patternVersions.categoryId, categories.id))
+    .where(
+      and(
+        visible(db),
+        eq(savedPatterns.userId, owner),
+        eq(patternVersions.priceKind, "FREE"),
+        exists(
+          db
+            .select({ id: fileAssets.id })
+            .from(fileAssets)
+            .where(
+              and(
+                eq(fileAssets.versionId, patternVersions.id),
+                eq(fileAssets.status, "READY"),
+                eq(fileAssets.purpose, "PATTERN_A4_PDF"),
+              ),
+            ),
+        ),
+      ),
+    )
+    .orderBy(desc(savedPatterns.createdAt), asc(patterns.id))
+    .limit(100);
 }

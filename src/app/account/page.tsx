@@ -1,3 +1,4 @@
+import { documentMessages } from "@/i18n/documents-ro";
 import { PublicShell } from "@/components/layout/public-shell";
 import { AuthForm } from "@/components/identity/auth-form";
 import { SessionControls } from "@/components/identity/session-controls";
@@ -20,6 +21,9 @@ export default async function AccountPage() {
         )}
         <a className="text-link" href={project.routes.measurements}>
           {customerMessages.profiles}
+        </a>
+        <a className="text-link" href={project.routes.library}>
+          {documentMessages.library}
         </a>
         <SessionControls />
         <h2 className="font-serif text-3xl">{m.mfa}</h2>

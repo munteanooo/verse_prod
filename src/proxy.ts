@@ -20,6 +20,12 @@ export function proxy(request: NextRequest) {
   }
 
   const nonce = randomBytes(16).toString("base64");
+  const endpoint =
+    process.env.STORAGE_PROVIDER === "s3" && process.env.STORAGE_ENDPOINT
+      ? URL.parse(process.env.STORAGE_ENDPOINT)
+      : undefined;
+  const storageOrigin =
+    endpoint?.protocol === "https:" ? " " + endpoint.origin : "";
   const csp = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
@@ -28,6 +34,7 @@ export function proxy(request: NextRequest) {
     "object-src 'none'",
     "base-uri 'none'",
     "frame-ancestors 'none'",
+    `connect-src 'self'${path.startsWith(admin) ? storageOrigin : ""}`,
     "form-action 'self'",
   ].join("; ");
   const requestHeaders = new Headers(request.headers);

@@ -35,3 +35,13 @@ The administrative catalog reuses the locked Phase 2 dependencies. Phase 3 intro
 ## Phase 4 additions
 
 The customer catalog and forms reuse the existing lockfile. Phase 4 adds no dependencies or third-party assets.
+
+## Phase 5 additions
+
+| Package                                 | Version  | License    |
+| --------------------------------------- | -------- | ---------- |
+| pdf-lib                                 | 1.17.1   | MIT        |
+| sharp                                   | 0.35.5   | Apache-2.0 |
+| AWS SDK S3 client and request presigner | 3.1178.0 | Apache-2.0 |
+
+The 31 added lock entries were checked with the installed package inventory. Their declared licenses are Apache-2.0, MIT, MIT AND Zlib and 0BSD. Sharp's already-locked libvips binaries retain their previously documented license obligations. The original synthetic fixture uses PDF's standard Helvetica font without redistributing a font binary.
