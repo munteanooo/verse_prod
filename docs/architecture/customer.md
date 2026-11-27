@@ -4,7 +4,7 @@
 
 Public reads use specific projections from the Phase 3 catalog tables. A discoverable version must be the newest published version of its stable pattern, have a publication timestamp at or before the current time, and belong to an active category and a non-archived pattern. A newer draft never replaces a published version. Category counts, detail lookups and sitemaps share this boundary. Public DTOs omit ownership, revisions, audit records, administrative flags and storage references.
 
-The catalog uses validated search, category, difficulty, price and sorting inputs and paginates in PostgreSQL, 12 records per page. Public category indexes expose up to 500 active categories. Sitemaps use the configured canonical origin and include up to 10,000 discoverable pattern paths. The home page uses published cards when available and an honest empty state otherwise. Phase 3 publication remains blocked. Automated tests create synthetic published rows through the operator connection to an isolated loopback database with a test-only name.
+The catalog uses validated search, category, difficulty, price and sorting inputs and paginates in PostgreSQL, 12 records per page. Public category indexes expose up to 500 active categories. Sitemaps use the configured canonical origin and include up to 10,000 discoverable pattern paths. The home page uses published cards when available and an honest empty state otherwise. Phase 5 enables publication after the file and scale checks. Automated tests create synthetic published rows through the operator connection to an isolated loopback database with a test-only name.
 
 ## Measurement fields and recommendation
 
@@ -39,4 +39,4 @@ JSON endpoints return explicit no-store responses. Guest recommendations send va
 
 ## Phase 5 integration
 
-A neutral placeholder represents the missing cover asset. The detail view explains that digital documents are unavailable. Phase 5 must add asset validation and controlled access checks before enabling publication or downloads. Premium labels and amounts describe the pattern's classification and never imply a purchase or entitlement.
+A neutral placeholder represents the missing cover asset. The detail view offers authorized printable PDF downloads for free patterns with ready documents. Premium labels and amounts describe the pattern's classification and never imply a purchase or entitlement.

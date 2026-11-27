@@ -1,3 +1,4 @@
+import { PatternImage } from "./pattern-image";
 import { ActionLink, Button } from "@/components/ui/button";
 import { inputClass } from "@/components/catalog/classes";
 import { project } from "@/config/project";
@@ -33,8 +34,8 @@ export function PatternCards({ patterns }: { patterns: PatternCard[] }) {
           key={pattern.slug}
           className="min-w-0 border-b border-border pb-5 [overflow-wrap:anywhere]"
         >
-          <div className="mb-4 grid aspect-[3/2] place-items-center bg-muted p-6 text-muted-foreground">
-            {m.imagePending}
+          <div className="mb-4">
+            <PatternImage id={pattern.coverId} alt={pattern.coverAlt} />
           </div>
           <p className="text-sm text-muted-foreground">
             {pattern.category}

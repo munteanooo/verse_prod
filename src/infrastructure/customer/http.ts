@@ -1,3 +1,4 @@
+import { customerDownload } from "../documents/http";
 import { z } from "zod";
 import { readJson } from "../../shared/http-json";
 import { authorize } from "../auth/access";
@@ -37,6 +38,13 @@ export async function publicCatalogRequest(
   const [key, action, ...rest] = path;
   if (rest.length || (key && !slug.safeParse(key).success))
     return json({ code: "missing" }, 404);
+  if (
+    request.method === "POST" &&
+    resource === "patterns" &&
+    key &&
+    action === "download"
+  )
+    return customerDownload(request, key);
   try {
     const identity = getIdentity();
     if (

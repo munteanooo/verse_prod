@@ -15,7 +15,7 @@ export async function adminPattern(patternId: string, version?: number) {
   const { db, actor } = await adminCatalog();
   if (!id.safeParse(patternId).success) notFound();
   try {
-    return { db, ...(await readPattern(db, actor, patternId, version)) };
+    return { db, actor, ...(await readPattern(db, actor, patternId, version)) };
   } catch (error) {
     if (
       error instanceof CatalogError &&

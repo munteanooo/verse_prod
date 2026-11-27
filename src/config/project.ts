@@ -13,6 +13,7 @@ export const project = {
     patterns: "/patterns",
     categories: "/categories",
     measurements: "/account/measurements",
+    library: "/account/library",
     login: "/login",
     register: "/register",
     forgotPassword: "/forgot-password",

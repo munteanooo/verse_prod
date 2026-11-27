@@ -21,7 +21,7 @@ Create inserts one pattern and its first draft in a single transaction. The wiza
 
 Drafts accept missing metadata but reject invalid supplied values. A snapshot captures category name and slug when a draft is saved. Measurement definitions are copied when first selected. Published snapshots remain unchanged if the source library changes. A draft can retain archived definitions it already references. New selections require active definitions. Categories and measurement definitions are archived rather than deleted.
 
-A draft can become published only after the readiness, unambiguous sizing and asset checks pass. Phase 3 always reports missing validated documents and persists attempted and rejected audit events. PostgreSQL prevents changes to historical versions and their children. Starting an edit of published content creates a new numbered draft and copies the ordered children. The published version remains addressable by pattern ID and version number. Archiving a pattern sets its stable archive timestamp and preserves every version and its future entitlement references. An archived pattern cannot be edited, cloned or published. Future public queries must exclude archived identities and serve only published versions.
+A draft can become published only after the readiness, unambiguous sizing and asset checks pass. Phase 5 checks validated files and source scale before allowing publication. PostgreSQL prevents changes to historical versions and their children. Starting an edit of published content creates a new numbered draft and copies the ordered children. The published version remains addressable by pattern ID and version number. Archiving a pattern sets its stable archive timestamp and preserves every version and its future entitlement references. An archived pattern cannot be edited, cloned or published. Future public queries must exclude archived identities and serve only published versions.
 
 ## Dynamic measurement and sizes
 
@@ -29,7 +29,7 @@ The measurement preview derives typed fields from selected definition snapshots 
 
 Phase 4 can evaluate a validated customer's canonical measurements against every configured size. Return all candidates that satisfy their bounds and let the customer choose when multiple sizes match. Preserve inclusive endpoints and expose overlaps. Incomplete data should not be used to invent a single recommendation. Phase 3 flags ambiguous overlaps among configured size intervals and never picks a size.
 
-Phase 5 should attach validated private document assets to immutable version and size identifiers. Before enabling publication, verify each required document, lock the stable pattern, recheck the draft revision and readiness, and atomically record the published version and audit event. Keep submitted file names, presigned URLs and customer data out of audit. No file or image integration is active in Phase 3.
+Phase 5 attaches validated private document assets to immutable versions and sizes. Before enabling publication, verify each required document, lock the stable pattern, recheck the draft revision and readiness, and atomically record the published version and audit event. Keep submitted file names, presigned URLs and customer data out of audit. See [file management and publication](documents.md).
 
 ## API and runtime grants
 

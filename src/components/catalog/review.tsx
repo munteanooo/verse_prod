@@ -38,13 +38,15 @@ export function PatternReview({
   definitions,
   category,
   active,
+  documentsReady = false,
 }: {
   draft: Draft;
   definitions: Definition[];
   category?: string;
   active: boolean;
+  documentsReady?: boolean;
 }) {
-  const checks = readiness(draft, active, false);
+  const checks = readiness(draft, active, documentsReady);
   const fields = measurementFields(draft, definitions);
   const overlap = overlappingSizes(draft);
   const { pricing } = draft;
@@ -156,7 +158,11 @@ export function PatternReview({
             {m.overlap} {a || m.unnamed} / {b || m.unnamed}.
           </p>
         ))}
-        <p className="text-sm text-muted-foreground">{m.publicationBlocked}</p>
+        {!documentsReady && (
+          <p className="text-sm text-muted-foreground">
+            {m.publicationBlocked}
+          </p>
+        )}
       </section>
     </div>
   );

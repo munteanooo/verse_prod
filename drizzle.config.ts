@@ -6,6 +6,7 @@ export default defineConfig({
     "./src/infrastructure/database/schema.ts",
     "./src/infrastructure/database/catalog-schema.ts",
     "./src/infrastructure/database/profile-schema.ts",
+    "./src/infrastructure/database/file-schema.ts",
   ],
   out: "./drizzle",
 });

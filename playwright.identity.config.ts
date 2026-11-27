@@ -1,3 +1,6 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { randomBytes } from "node:crypto";
 import { defineConfig, devices } from "@playwright/test";
 import { testDatabaseUrl } from "./tests/support/database";
@@ -17,6 +20,8 @@ export default defineConfig({
     timeout: 60_000,
     env: {
       DATABASE_URL: testDatabaseUrl(),
+      STORAGE_PROVIDER: "local",
+      STORAGE_LOCAL_ROOT: mkdtempSync(join(tmpdir(), "verse-playwright-")),
       BETTER_AUTH_SECRET: randomBytes(32).toString("base64url"),
       VERSE_SITE_URL: origin,
       VERSE_SMTP_URL: `smtp://127.0.0.1:${process.env.TEST_SMTP_PORT ?? "1025"}`,

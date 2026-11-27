@@ -1,3 +1,4 @@
+import { adminDocuments } from "../documents/http";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { authorize } from "../auth/access";
@@ -40,6 +41,21 @@ export async function catalogRequest(request: Request, path: string[]) {
     const writing = request.method !== "GET";
     if (writing && request.headers.get("origin") !== config.origin)
       return reply({ code: "forbidden" }, 403);
+    if (
+      resource === "files" ||
+      resource === "documents" ||
+      (resource === "patterns" &&
+        ["publish", "unpublish", "publication"].includes(operation))
+    ) {
+      return adminDocuments(
+        request,
+        path,
+        db,
+        { ...actor, sessionId: member.sessionId },
+        config.origin,
+        config.secret,
+      );
+    }
     if (rest.length || (operation && !item))
       return reply({ code: "missing" }, 404);
     const query = new URL(request.url).searchParams;
@@ -121,8 +137,10 @@ export async function catalogRequest(request: Request, path: string[]) {
         }[error.code],
       );
     }
-    if ((error as { cause?: { code?: string } }).cause?.code === "23505")
-      return reply({ code: "duplicate" }, 409);
+    const postgres = error as { code?: string; cause?: { code?: string } };
+    const code = postgres.code ?? postgres.cause?.code;
+    if (code === "23503") return reply({ code: "association" }, 409);
+    if (code === "23505") return reply({ code: "duplicate" }, 409);
     console.error("Catalog request failed.", { requestId });
     return reply({ code: "unavailable" }, 503);
   }

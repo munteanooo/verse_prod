@@ -20,6 +20,15 @@ test("shows published customer content, fits standard sizes and reuses only the 
     const draft = await fixture.add("hidden", "draft");
     const name = "Măsurătoare " + fixture.key;
     const detail = "/patterns/" + pattern.slug;
+    const premium = await page.request.post(
+      "/api/v1/patterns/" + pattern.slug + "/download",
+      {
+        headers: { Origin: baseURL! },
+        data: { sizeId: randomUUID(), edition: 1 },
+      },
+    );
+    expect(premium.status()).toBe(403);
+
     const guestProfileCount = await db.$count(measurementProfiles);
     const sitemap = await page.request.get("/sitemap.xml");
     expect(sitemap.ok()).toBe(true);

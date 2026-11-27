@@ -124,7 +124,7 @@ export const patternVersions = pgTable(
     uniqueIndex("one_draft_per_pattern")
       .on(t.patternId)
       .where(sql`${t.state} = 'DRAFT'`),
-    uniqueIndex("published_pattern_slug")
+    index("published_pattern_slug")
       .on(t.slug)
       .where(sql`${t.state} = 'PUBLISHED'`),
     index("versions_category_idx").on(t.categoryId),

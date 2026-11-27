@@ -1,3 +1,4 @@
+import { listFiles, publicationHidden } from "@/modules/documents/service";
 import { PatternActions } from "@/components/catalog/pattern-actions";
 import { patternsHref } from "@/components/catalog/paths";
 import { Wizard } from "@/components/catalog/wizard";
@@ -11,8 +12,19 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { db, pattern, version, draft, definitions, category } =
-    await adminPattern(id);
+  const {
+    db,
+    actor,
+    pattern,
+    version,
+    versions,
+    draft,
+    definitions,
+    category,
+  } = await adminPattern(id);
+  const hidden = await publicationHidden(db, id);
+  const canWithdraw =
+    versions.some((entry) => entry.state === "PUBLISHED") && !hidden;
   const readOnly = Boolean(pattern.archivedAt) || version.state !== "DRAFT";
   const [categories, available] = readOnly
     ? [[], []]
@@ -47,6 +59,7 @@ export default async function Page({
             id={id}
             archived={Boolean(pattern.archivedAt)}
             draft={false}
+            canWithdraw={canWithdraw}
           />
         </>
       ) : (
@@ -55,6 +68,8 @@ export default async function Page({
           versionId={version.id}
           revision={version.revision}
           initial={draft}
+          initialFiles={await listFiles(db, actor, version.id)}
+          canWithdraw={canWithdraw}
           options={categories}
           definitions={options}
         />

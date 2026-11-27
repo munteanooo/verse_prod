@@ -1,3 +1,5 @@
+import { demoImage, demoPdf } from "../../scripts/documents/fixtures.mjs";
+import { documentMessages as d } from "../../src/i18n/documents-ro";
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
@@ -249,5 +251,130 @@ test("registers via SMTP, denies customer access and opens admin only after MFA"
     await expect(
       page.getByRole("status").filter({ hasText: c.publicationBlocked }),
     ).toBeVisible();
+  });
+
+  await test.step("uploads a cover and source, generates and downloads A4, then withdraws", async () => {
+    const suffix = email.slice(0, 8);
+    const slug = "fusta-" + suffix;
+    const step = (index: number) =>
+      page.getByRole("button", {
+        name: String(index + 1) + ". " + c.steps[index],
+        exact: true,
+      });
+    await page.getByRole("link", { name: c.edit, exact: true }).click();
+    const patternPath = page.url().replace(/\/edit$/, "");
+    await step(4).click();
+    await page
+      .getByRole("combobox", { name: c.steps[4], exact: true })
+      .selectOption("FREE");
+    await page.getByRole("button", { name: c.saveDraft }).click();
+    await expect(page.getByText(c.saved, { exact: true })).toBeVisible();
+
+    await step(0).click();
+    await page.getByLabel(d.alt).fill("Copertă sintetică");
+    await page.getByLabel(d.choose).setInputFiles({
+      name: "atelier.png",
+      mimeType: "image/png",
+      buffer: await demoImage(),
+    });
+    await page.getByRole("button", { name: d.upload }).click();
+    await expect(page.getByText(d.uploaded, { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("img", { name: "Copertă sintetică" }),
+    ).toBeVisible();
+
+    await step(3).click();
+    const sourceSize = page.locator('select[name="sizeId"]');
+    await sourceSize.selectOption({ label: "Scurtă" });
+    const sizeId = await sourceSize.inputValue();
+    await page.getByLabel(d.choose).setInputFiles({
+      name: "control.pdf",
+      mimeType: "application/pdf",
+      buffer: Buffer.from(await demoPdf()),
+    });
+    await page.getByRole("button", { name: d.upload }).click();
+    await expect(page.getByText(d.uploaded, { exact: true })).toBeVisible();
+    await page.getByLabel(d.scaleHint).fill("Linia de control măsoară 100 mm");
+    await page.getByRole("button", { name: d.confirmScale }).click();
+    await expect(
+      page.getByText(d.scaleDone, { exact: true }).first(),
+    ).toBeVisible();
+    await page
+      .locator('select[name="processSize"]')
+      .selectOption({ label: "Scurtă" });
+    await page.getByRole("button", { name: d.generate }).click();
+    await expect(page.getByText(d.generated, { exact: true })).toBeVisible();
+    const preview = await page
+      .getByRole("link", { name: d.preview })
+      .getAttribute("href");
+    if (!preview) throw new Error("Expected document preview");
+    const previewResponse = await page.request.get(preview);
+    expect(previewResponse.headers()["content-type"]).toBe("application/pdf");
+    expect((await request.get(preview)).status()).toBe(404);
+
+    await step(5).click();
+    await page.getByRole("button", { name: c.publish }).click();
+    await expect(page).toHaveURL(new RegExp(patternPath + "/preview$"));
+    await page.goto("/patterns/" + slug);
+    await expect(
+      page.getByRole("img", { name: "Copertă sintetică" }),
+    ).toBeVisible();
+    await expect
+      .poll(() =>
+        page
+          .getByRole("img", { name: "Copertă sintetică" })
+          .evaluate((image: HTMLImageElement) => image.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+    const measurement = page.getByRole("textbox", {
+      name: new RegExp("Talie " + suffix),
+    });
+    await measurement.fill("70");
+    const customer = await import("../../src/i18n/customer-ro");
+    await page
+      .getByRole("button", { name: customer.customerMessages.calculate })
+      .click();
+    await expect(
+      page
+        .getByRole("status")
+        .filter({ hasText: customer.customerMessages.single }),
+    ).toBeVisible();
+    await page
+      .getByRole("combobox", { name: customer.customerMessages.selectSize })
+      .selectOption({ label: "Scurtă" });
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: d.download }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(/\.pdf$/);
+    const guest = await request.post("/api/v1/patterns/" + slug + "/download", {
+      headers: { Origin: baseURL! },
+      data: { sizeId, edition: 1 },
+    });
+    expect(guest.status()).toBe(200);
+    expect((await guest.body()).subarray(0, 5).toString()).toBe("%PDF-");
+
+    await page.getByRole("button", { name: d.saveLibrary }).click();
+    await expect(page.getByText(d.librarySaved, { exact: true })).toBeVisible();
+    await page.goto("/account/library");
+    await expect(
+      page.getByRole("link", { name: "Fustă petrecută " + suffix }),
+    ).toBeVisible();
+
+    await page.goto(patternPath + "/preview");
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: d.unpublish }).click();
+    await expect(page.getByText(d.withdrawn, { exact: true })).toBeVisible();
+    await page.goto("/account/library");
+    await expect(page.getByText(d.libraryEmpty, { exact: true })).toBeVisible();
+    expect((await request.get("/api/v1/patterns/" + slug)).status()).toBe(404);
+    expect(
+      (
+        await request.post("/api/v1/patterns/" + slug + "/download", {
+          headers: { Origin: baseURL! },
+          data: { sizeId, edition: 1 },
+        })
+      ).status(),
+    ).toBe(404);
   });
 });

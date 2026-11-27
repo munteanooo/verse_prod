@@ -55,7 +55,7 @@ export async function authorize(
     }
   }
 
-  return { user: active.user, role };
+  return { user: active.user, role, sessionId: active.session.id };
 }
 
 const current = cache(async (permission?: Permission) => {
